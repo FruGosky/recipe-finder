@@ -14,53 +14,53 @@ import {
   updateFavoriteRecipeParamsSchema,
   updateFavoriteRecipeSchema,
 } from './favorite-recipes.schema';
-import { Request, Response } from 'express';
 import { getResponseMessageJSON } from '../../helpers/get-response-message.json';
 import { getResponseErrorJSON } from '../../helpers/get-response-error-json';
 import { isDrizzlePostgresUniqueViolationError } from '../../helpers/is-drizzle-postgres-unique-violation-error';
+import { Context } from 'hono';
 
 // CREATE
-export const createFavoriteRecipe = async (req: Request, res: Response) => {
-  const { data, error } = createFavoriteRecipeSchema.safeParse(req.body);
-  if (error) return getRequestSchemaParseError(res, error);
+export const createFavoriteRecipe = async (c: Context) => {
+  const { data, error } = createFavoriteRecipeSchema.safeParse(await c.req.json());
+  if (error) return getRequestSchemaParseError(c, error);
 
   try {
     const [newFavoriteRecipe] = await db.insert(favoriteRecipesTable).values(data).returning();
     if (!newFavoriteRecipe) throw new Error('Insert failed, no data was returned!');
 
-    return res.status(StatusCodes.CREATED).json(newFavoriteRecipe);
+    return c.json(newFavoriteRecipe, StatusCodes.CREATED);
   } catch (error) {
     if (isDrizzlePostgresUniqueViolationError(error)) {
       const errorJSON = getResponseErrorJSON(
         `Favorite Recipe with recipeId '${data.recipeId}' & userId '${data.userId}' already exists!`
       );
-      return res.status(StatusCodes.CONFLICT).json(errorJSON);
+      return c.json(errorJSON, StatusCodes.CONFLICT);
     }
 
-    return getRequestError(req, res, error);
+    return getRequestError(c, error);
   }
 };
 
 // GET ALL
-export const getAllFavoriteRecipes = async (req: Request, res: Response) => {
-  const { data, error } = getAllFavoriteRecipesParamsSchema.safeParse(req.params);
-  if (error) return getRequestSchemaParseError(res, error);
+export const getAllFavoriteRecipes = async (c: Context) => {
+  const { data, error } = getAllFavoriteRecipesParamsSchema.safeParse(c.req.param());
+  if (error) return getRequestSchemaParseError(c, error);
 
   try {
     const favoriteRecipes = await db
       .select()
       .from(favoriteRecipesTable)
       .where(eq(favoriteRecipesTable.userId, data.userId));
-    return res.status(StatusCodes.OK).json(favoriteRecipes);
+    return c.json(favoriteRecipes, StatusCodes.OK);
   } catch (error) {
-    return getRequestError(req, res, error);
+    return getRequestError(c, error);
   }
 };
 
 // GET BY ID
-export const getFavoriteRecipeById = async (req: Request, res: Response) => {
-  const { data, error } = getFavoriteRecipeByIdParamsSchema.safeParse(req.params);
-  if (error) return getRequestSchemaParseError(res, error);
+export const getFavoriteRecipeById = async (c: Context) => {
+  const { data, error } = getFavoriteRecipeByIdParamsSchema.safeParse(c.req.param());
+  if (error) return getRequestSchemaParseError(c, error);
 
   try {
     const [favoriteRecipe] = await db
@@ -78,25 +78,27 @@ export const getFavoriteRecipeById = async (req: Request, res: Response) => {
       const messageJSON = getResponseMessageJSON(
         `Recipe with userId '${data.userId}' & recipeId '${data.recipeId}' was not found!`
       );
-      return res.status(StatusCodes.NOT_FOUND).json(messageJSON);
+      return c.json(messageJSON, StatusCodes.NOT_FOUND);
     }
 
-    return res.status(StatusCodes.OK).json(favoriteRecipe);
+    return c.json(favoriteRecipe, StatusCodes.OK);
   } catch (error) {
-    return getRequestError(req, res, error);
+    return getRequestError(c, error);
   }
 };
 
 // UPDATE
-export const updateFavoriteRecipe = async (req: Request, res: Response) => {
+export const updateFavoriteRecipe = async (c: Context) => {
   const { data: paramsData, error: paramsError } = updateFavoriteRecipeParamsSchema.safeParse(
-    req.params
+    c.req.param()
   );
-  if (paramsError) return getRequestSchemaParseError(res, paramsError);
+  if (paramsError) return getRequestSchemaParseError(c, paramsError);
   const { userId, recipeId } = paramsData;
 
-  const { data: bodyData, error: bodyError } = updateFavoriteRecipeSchema.safeParse(req.body);
-  if (bodyError) return getRequestSchemaParseError(res, bodyError);
+  const { data: bodyData, error: bodyError } = updateFavoriteRecipeSchema.safeParse(
+    await c.req.json()
+  );
+  if (bodyError) return getRequestSchemaParseError(c, bodyError);
 
   try {
     const updatedFavoriteRecipe: UpdateFavoriteRecipe & Pick<FavoriteRecipe, 'updatedAt'> = {
@@ -115,20 +117,20 @@ export const updateFavoriteRecipe = async (req: Request, res: Response) => {
       const messageJSON = getResponseMessageJSON(
         `Recipe with userId '${userId}' & recipeId '${recipeId}' was not found!`
       );
-      return res.status(StatusCodes.NOT_FOUND).json(messageJSON);
+      return c.json(messageJSON, StatusCodes.NOT_FOUND);
     }
 
     const messageJSON = getResponseMessageJSON('Favorite Recipe updated successfully!');
-    return res.status(StatusCodes.OK).json(messageJSON);
+    return c.json(messageJSON, StatusCodes.OK);
   } catch (error) {
-    return getRequestError(req, res, error);
+    return getRequestError(c, error);
   }
 };
 
 // DELETE
-export const deleteFavoriteRecipe = async (req: Request, res: Response) => {
-  const { data, error } = deleteFavoriteRecipeParamsSchema.safeParse(req.params);
-  if (error) return getRequestSchemaParseError(res, error);
+export const deleteFavoriteRecipe = async (c: Context) => {
+  const { data, error } = deleteFavoriteRecipeParamsSchema.safeParse(c.req.param());
+  if (error) return getRequestSchemaParseError(c, error);
 
   try {
     const result = await db
@@ -144,12 +146,12 @@ export const deleteFavoriteRecipe = async (req: Request, res: Response) => {
       const messageJSON = getResponseMessageJSON(
         `Recipe with userId '${data.userId}' & recipeId '${data.recipeId}' was not found!`
       );
-      return res.status(StatusCodes.NOT_FOUND).json(messageJSON);
+      return c.json(messageJSON, StatusCodes.NOT_FOUND);
     }
 
     const messageJSON = getResponseMessageJSON('Favorite Recipe removed successfully!');
-    return res.status(StatusCodes.OK).json(messageJSON);
+    return c.json(messageJSON, StatusCodes.OK);
   } catch (error) {
-    return getRequestError(req, res, error);
+    return getRequestError(c, error);
   }
 };

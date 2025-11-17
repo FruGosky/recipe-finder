@@ -1,9 +1,4 @@
-import dotenv from 'dotenv';
 import { z } from 'zod';
-
-const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env';
-
-dotenv.config({ path: envFile });
 
 const envSchema = z.object({
   PORT: z.coerce.number(),

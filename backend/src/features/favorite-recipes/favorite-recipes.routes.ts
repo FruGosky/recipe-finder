@@ -1,4 +1,3 @@
-import { Router } from 'express';
 import {
   createFavoriteRecipe,
   deleteFavoriteRecipe,
@@ -6,8 +5,9 @@ import {
   getFavoriteRecipeById,
   updateFavoriteRecipe,
 } from './favorite-recipes.controller';
+import { Hono } from 'hono';
 
-const router = Router();
+const router = new Hono();
 
 router.post('/', createFavoriteRecipe);
 router.get('/:userId', getAllFavoriteRecipes);

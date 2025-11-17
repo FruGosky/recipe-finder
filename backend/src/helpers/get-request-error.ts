@@ -1,13 +1,13 @@
 import { StatusCodes } from 'http-status-codes';
 import { getErrorMessage } from './get-error-message';
 import { getResponseErrorJSON } from './get-response-error-json';
-import { Request, Response } from 'express';
+import { Context } from 'hono';
 
-export const getRequestError = (req: Request, res: Response, error: unknown) => {
-  const httpMethod = req.method;
-  const originalUrl = req.originalUrl;
+export const getRequestError = (c: Context, error: unknown) => {
+  const httpMethod = c.req.method;
+  const originalUrl = c.req.url;
   const errorMessage = getErrorMessage(error);
   console.error(`${httpMethod} ${originalUrl} error: `, errorMessage);
   const errorJSON = getResponseErrorJSON(errorMessage);
-  return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorJSON);
+  return c.json(errorJSON, StatusCodes.INTERNAL_SERVER_ERROR);
 };

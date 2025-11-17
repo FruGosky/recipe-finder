@@ -1,15 +1,11 @@
-import express from 'express';
 import { favoriteRecipesRouter } from './features/favorite-recipes/favorite-recipes.routes';
-import { healthCheckRouter } from './features/health-check/health-check.routes';
+import { healthRouter } from './features/health/health.routes';
+import { Hono } from 'hono';
 
-const app = express();
-
-// Middleware
-app.use(express.json()); // For handling JSON
-app.use(express.urlencoded({ extended: true })); // For handling FormData
+const app = new Hono();
 
 // Routes
-app.get('/api/health-check', healthCheckRouter);
-app.use('/api/favorite-recipes', favoriteRecipesRouter);
+app.route('/api/health', healthRouter);
+app.route('/api/favorite-recipes', favoriteRecipesRouter);
 
 export { app };

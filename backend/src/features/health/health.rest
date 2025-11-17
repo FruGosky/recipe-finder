@@ -7,4 +7,4 @@
 ###
 
 # @name checkAPI
-GET {{BASE_URL}}/health-check
+GET {{BASE_URL}}/health
