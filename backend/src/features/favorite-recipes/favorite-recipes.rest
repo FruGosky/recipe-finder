@@ -1,0 +1,53 @@
+@PROTOCOL = http
+@HOSTNAME = localhost
+@PORT = {{$dotenv PORT}}
+@API_SUFFIX = api
+@BASE_URL = {{PROTOCOL}}://{{HOSTNAME}}:{{PORT}}/{{API_SUFFIX}}
+
+###
+
+@userId = {{create.response.body.$.userId}}
+@recipeId = {{create.response.body.$.recipeId}}
+
+###
+
+# @name create
+POST {{BASE_URL}}/favorite-recipes
+Content-Type: application/json
+
+{
+  "userId": "11",
+  "recipeId": 11,
+  "title": "test",
+  "image": null,
+  "cookTime": null,
+  "servings": null
+}
+
+###
+
+# @name getAll
+GET {{BASE_URL}}/favorite-recipes/{{userId}}
+
+###
+
+# @name getById
+GET {{BASE_URL}}/favorite-recipes/{{userId}}/{{recipeId}}
+
+###
+
+# @name update
+PATCH {{BASE_URL}}/favorite-recipes/{{userId}}/{{recipeId}}
+Content-Type: application/json
+
+{
+  "title": "updated test",
+  "image": null,
+  "cookTime": "30s",
+  "servings": "4"
+}
+
+###
+
+# @name delete
+DELETE {{BASE_URL}}/favorite-recipes/{{userId}}/{{recipeId}}

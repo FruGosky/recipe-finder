@@ -1,0 +1,10 @@
+@PROTOCOL = http
+@HOSTNAME = localhost
+@PORT = {{$dotenv PORT}}
+@API_SUFFIX = api
+@BASE_URL = {{PROTOCOL}}://{{HOSTNAME}}:{{PORT}}/{{API_SUFFIX}}
+
+###
+
+# @name checkAPI
+GET {{BASE_URL}}/health-check

@@ -1,0 +1,44 @@
+{
+  "name": "recipe-finder-api",
+  "version": "1.0.0",
+  "main": "src/production-server",
+  "scripts": {
+    "dev": "nodemon",
+    "build": "tsc",
+    "start": "set NODE_ENV=production && bun run src/production-server",
+    "db:generate": "bunx drizzle-kit generate",
+    "db:push": "bunx drizzle-kit push",
+    "lint": "bunx eslint . && echo '✅ Lint passed!'",
+    "lint:fix": "bunx eslint . --fix  && echo '✅ Lint fix done!'"
+  },
+  "keywords": [],
+  "type": "module",
+  "author": "Łukasz Komandzik",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@clerk/clerk-expo": "^2.19.1",
+    "cors": "^2.8.5",
+    "cron": "^4.3.4",
+    "dotenv": "^17.2.3",
+    "drizzle-orm": "^0.44.7",
+    "express": "^5.1.0",
+    "http-status-codes": "^2.3.0",
+    "pg": "^8.16.3",
+    "serverless-http": "^4.0.0",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.5",
+    "@types/node": "^24.10.1",
+    "@typescript-eslint/eslint-plugin": "^8.46.4",
+    "@typescript-eslint/parser": "^8.46.4",
+    "drizzle-kit": "^0.31.6",
+    "eslint": "^9.39.1",
+    "eslint-plugin-unused-imports": "^4.3.0",
+    "jiti": "^2.6.1",
+    "nodemon": "^3.1.11",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}
