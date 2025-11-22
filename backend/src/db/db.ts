@@ -5,4 +5,4 @@ import { Pool } from 'pg';
 
 const pool = new Pool(DB_CREDENTIALS);
 
-export const db = drizzle(pool, { schema });
+export const db = drizzle(pool, { schema, casing: 'snake_case' });

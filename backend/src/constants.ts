@@ -7,7 +7,7 @@ export const DB_CREDENTIALS: PoolConfig = {
   password: ENV.DB_PASSWORD,
   database: ENV.DB_DATABASE,
   port: ENV.DB_PORT,
-  ssl: { rejectUnauthorized: false },
+  ssl: false,
 };
 
 export const POSTGRES_UNIQUE_VIOLATION_CODE = '23505';

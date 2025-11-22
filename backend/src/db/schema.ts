@@ -10,8 +10,12 @@ export const favoriteRecipesTable = pgTable(
     image: text('image'),
     cookTime: text('cook_time'),
     servings: text('servings'),
-    createdAt: timestamp('created_at').defaultNow(),
-    updatedAt: timestamp('updated_at'),
+    createdAt: timestamp('created_at')
+      .$defaultFn(() => new Date())
+      .notNull(),
+    updatedAt: timestamp('updated_at')
+      .$defaultFn(() => new Date())
+      .$onUpdate(() => new Date()),
   },
   (table) => [unique('favorite_user_recipe_unique').on(table.userId, table.recipeId)]
 );

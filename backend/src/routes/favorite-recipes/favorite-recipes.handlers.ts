@@ -1,28 +1,24 @@
 import { and, eq } from 'drizzle-orm';
-import { StatusCodes } from 'http-status-codes';
+import * as StatusCodes from '@/lib/http-status-codes';
 import { db } from '../../db/db';
 import { favoriteRecipesTable } from '../../db/schema';
 import { getRequestError } from '../../helpers/get-request-error';
-import { getRequestSchemaParseError } from '../../helpers/get-request-schema-parse-error';
-import {
-  createFavoriteRecipeSchema,
-  deleteFavoriteRecipeParamsSchema,
-  FavoriteRecipe,
-  getAllFavoriteRecipesParamsSchema,
-  getFavoriteRecipeByIdParamsSchema,
-  UpdateFavoriteRecipe,
-  updateFavoriteRecipeParamsSchema,
-  updateFavoriteRecipeSchema,
-} from './favorite-recipes.schema';
+import { FavoriteRecipe, UpdateFavoriteRecipe } from './favorite-recipes.schema';
 import { getResponseMessageJSON } from '../../helpers/get-response-message.json';
 import { getResponseErrorJSON } from '../../helpers/get-response-error-json';
-import { isDrizzlePostgresUniqueViolationError } from '../../helpers/is-drizzle-postgres-unique-violation-error';
-import { Context } from 'hono';
+import { AppRouteHandler } from '@/lib/types';
+import {
+  CreateRoute,
+  DeleteOneRoute,
+  GetAllRoute,
+  GetByIdRoute,
+  UpdateRoute,
+} from './favorite-recipes.routes';
+import { isDatabaseUniqueViolationError } from '@/db/is-database-unique-violation-error';
 
 // CREATE
-export const createFavoriteRecipe = async (c: Context) => {
-  const { data, error } = createFavoriteRecipeSchema.safeParse(await c.req.json());
-  if (error) return getRequestSchemaParseError(c, error);
+export const create: AppRouteHandler<CreateRoute> = async (c) => {
+  const data = c.req.valid('json');
 
   try {
     const [newFavoriteRecipe] = await db.insert(favoriteRecipesTable).values(data).returning();
@@ -30,21 +26,20 @@ export const createFavoriteRecipe = async (c: Context) => {
 
     return c.json(newFavoriteRecipe, StatusCodes.CREATED);
   } catch (error) {
-    if (isDrizzlePostgresUniqueViolationError(error)) {
+    if (isDatabaseUniqueViolationError(error)) {
       const errorJSON = getResponseErrorJSON(
         `Favorite Recipe with recipeId '${data.recipeId}' & userId '${data.userId}' already exists!`
       );
       return c.json(errorJSON, StatusCodes.CONFLICT);
     }
 
-    return getRequestError(c, error);
+    return getRequestError(c, error, StatusCodes.INTERNAL_SERVER_ERROR);
   }
 };
 
 // GET ALL
-export const getAllFavoriteRecipes = async (c: Context) => {
-  const { data, error } = getAllFavoriteRecipesParamsSchema.safeParse(c.req.param());
-  if (error) return getRequestSchemaParseError(c, error);
+export const getAll: AppRouteHandler<GetAllRoute> = async (c) => {
+  const data = c.req.valid('param');
 
   try {
     const favoriteRecipes = await db
@@ -53,14 +48,13 @@ export const getAllFavoriteRecipes = async (c: Context) => {
       .where(eq(favoriteRecipesTable.userId, data.userId));
     return c.json(favoriteRecipes, StatusCodes.OK);
   } catch (error) {
-    return getRequestError(c, error);
+    return getRequestError(c, error, StatusCodes.INTERNAL_SERVER_ERROR);
   }
 };
 
 // GET BY ID
-export const getFavoriteRecipeById = async (c: Context) => {
-  const { data, error } = getFavoriteRecipeByIdParamsSchema.safeParse(c.req.param());
-  if (error) return getRequestSchemaParseError(c, error);
+export const getById: AppRouteHandler<GetByIdRoute> = async (c) => {
+  const data = c.req.valid('param');
 
   try {
     const [favoriteRecipe] = await db
@@ -75,7 +69,7 @@ export const getFavoriteRecipeById = async (c: Context) => {
       .limit(1);
 
     if (!favoriteRecipe) {
-      const messageJSON = getResponseMessageJSON(
+      const messageJSON = getResponseErrorJSON(
         `Recipe with userId '${data.userId}' & recipeId '${data.recipeId}' was not found!`
       );
       return c.json(messageJSON, StatusCodes.NOT_FOUND);
@@ -83,22 +77,14 @@ export const getFavoriteRecipeById = async (c: Context) => {
 
     return c.json(favoriteRecipe, StatusCodes.OK);
   } catch (error) {
-    return getRequestError(c, error);
+    return getRequestError(c, error, StatusCodes.INTERNAL_SERVER_ERROR);
   }
 };
 
 // UPDATE
-export const updateFavoriteRecipe = async (c: Context) => {
-  const { data: paramsData, error: paramsError } = updateFavoriteRecipeParamsSchema.safeParse(
-    c.req.param()
-  );
-  if (paramsError) return getRequestSchemaParseError(c, paramsError);
-  const { userId, recipeId } = paramsData;
-
-  const { data: bodyData, error: bodyError } = updateFavoriteRecipeSchema.safeParse(
-    await c.req.json()
-  );
-  if (bodyError) return getRequestSchemaParseError(c, bodyError);
+export const update: AppRouteHandler<UpdateRoute> = async (c) => {
+  const paramsData = c.req.valid('param');
+  const bodyData = c.req.valid('json');
 
   try {
     const updatedFavoriteRecipe: UpdateFavoriteRecipe & Pick<FavoriteRecipe, 'updatedAt'> = {
@@ -110,12 +96,15 @@ export const updateFavoriteRecipe = async (c: Context) => {
       .update(favoriteRecipesTable)
       .set(updatedFavoriteRecipe)
       .where(
-        and(eq(favoriteRecipesTable.userId, userId), eq(favoriteRecipesTable.recipeId, recipeId))
+        and(
+          eq(favoriteRecipesTable.userId, paramsData.userId),
+          eq(favoriteRecipesTable.recipeId, paramsData.recipeId)
+        )
       );
 
     if (!result.rowCount) {
-      const messageJSON = getResponseMessageJSON(
-        `Recipe with userId '${userId}' & recipeId '${recipeId}' was not found!`
+      const messageJSON = getResponseErrorJSON(
+        `Recipe with userId '${paramsData.userId}' & recipeId '${paramsData.recipeId}' was not found!`
       );
       return c.json(messageJSON, StatusCodes.NOT_FOUND);
     }
@@ -123,14 +112,13 @@ export const updateFavoriteRecipe = async (c: Context) => {
     const messageJSON = getResponseMessageJSON('Favorite Recipe updated successfully!');
     return c.json(messageJSON, StatusCodes.OK);
   } catch (error) {
-    return getRequestError(c, error);
+    return getRequestError(c, error, StatusCodes.INTERNAL_SERVER_ERROR);
   }
 };
 
 // DELETE
-export const deleteFavoriteRecipe = async (c: Context) => {
-  const { data, error } = deleteFavoriteRecipeParamsSchema.safeParse(c.req.param());
-  if (error) return getRequestSchemaParseError(c, error);
+export const deleteOne: AppRouteHandler<DeleteOneRoute> = async (c) => {
+  const data = c.req.valid('param');
 
   try {
     const result = await db
@@ -143,7 +131,7 @@ export const deleteFavoriteRecipe = async (c: Context) => {
       );
 
     if (!result.rowCount) {
-      const messageJSON = getResponseMessageJSON(
+      const messageJSON = getResponseErrorJSON(
         `Recipe with userId '${data.userId}' & recipeId '${data.recipeId}' was not found!`
       );
       return c.json(messageJSON, StatusCodes.NOT_FOUND);
@@ -152,6 +140,6 @@ export const deleteFavoriteRecipe = async (c: Context) => {
     const messageJSON = getResponseMessageJSON('Favorite Recipe removed successfully!');
     return c.json(messageJSON, StatusCodes.OK);
   } catch (error) {
-    return getRequestError(c, error);
+    return getRequestError(c, error, StatusCodes.INTERNAL_SERVER_ERROR);
   }
 };

@@ -1,6 +1,7 @@
 import { ZodError } from 'zod';
+import { $ZodError } from 'zod/v4/core';
 
-export const getErrorMessagesFromZod = (error: ZodError): string => {
+export const getErrorMessagesFromZod = (error: ZodError | $ZodError): string => {
   const issue = error.issues[0];
   const issueField = issue.path.join('.') ?? 'unknown path';
   return `[${issueField}]: ${issue.message}`;
@@ -22,7 +23,10 @@ const PATHS_TO_CHECK_FOR_MESSAGE: string[][] = [
 ];
 
 export const getErrorMessage = (error: unknown): string => {
-  if (error instanceof ZodError) return getErrorMessagesFromZod(error);
+  if (typeof error === 'object' && error && 'error' in error) return getErrorMessage(error.error);
+  if (error instanceof ZodError || error instanceof $ZodError) {
+    return getErrorMessagesFromZod(error);
+  }
   if (typeof error === 'string') return error;
 
   for (const path of PATHS_TO_CHECK_FOR_MESSAGE) {

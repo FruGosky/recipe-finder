@@ -3,9 +3,9 @@ import { Server as HttpsServer } from 'https';
 
 export const handleClosingServer = (server: HttpServer | HttpsServer) => {
   const shutdown = () => {
-    console.log('Shutting down...');
+    console.info('Shutting down...');
     server.close(() => {
-      console.log('Server closed');
+      console.info('Server closed');
       process.exit(0);
     });
   };
