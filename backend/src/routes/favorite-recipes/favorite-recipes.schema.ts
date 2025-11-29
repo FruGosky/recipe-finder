@@ -2,9 +2,9 @@ import z from 'zod';
 
 export const favoriteRecipeSchema = z.object({
   id: z.int(),
-  userId: z.string(),
+  userId: z.string().min(1, 'userId cannot be empty'),
   recipeId: z.int(),
-  title: z.string(),
+  title: z.string().min(1, 'title cannot be empty'),
   image: z.string().nullable(),
   cookTime: z.string().nullable(),
   servings: z.string().nullable(),

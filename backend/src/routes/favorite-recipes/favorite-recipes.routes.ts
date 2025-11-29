@@ -12,24 +12,77 @@ import { messageJSONSchema } from '../../helpers/get-response-message.json';
 import { createRoute } from '@hono/zod-openapi';
 import { jsonContent } from '../../helpers/json-content';
 import { jsonContentRequired } from '@/helpers/json-content-required';
+import { RouteReturnMessages } from '@/lib/types';
 
 const tags = ['Favorite Recipes'];
 
 const PATH_PREFIX = '/favorite-recipes';
+
+export const routeReturnMessages = {
+  create: {
+    request: {
+      body: 'Favorite Recipe to create',
+    },
+    responses: {
+      INTERNAL_SERVER_ERROR: 'Something went wrong',
+      CONFLICT: 'Favorite recipe already exists',
+      CREATED: 'Favorite Recipe created, returns created entity',
+    },
+  },
+  getAll: {
+    responses: {
+      INTERNAL_SERVER_ERROR: 'Something went wrong',
+      OK: 'Returns all favorite recipes for user',
+    },
+  },
+  getById: {
+    responses: {
+      INTERNAL_SERVER_ERROR: 'Something went wrong',
+      UNPROCESSABLE_ENTITY: 'Invalid data',
+      NOT_FOUND: 'Favorite Recipe with provided id was not found',
+      OK: 'Returns favorite recipe with provided id',
+    },
+  },
+  update: {
+    request: {
+      body: 'Favorite Recipe to update',
+    },
+    responses: {
+      INTERNAL_SERVER_ERROR: 'Something went wrong',
+      UNPROCESSABLE_ENTITY: 'Invalid data',
+      NOT_FOUND: 'Favorite Recipe with provided combo of ids was not found',
+      OK: 'Returns all favorite recipes for user',
+    },
+  },
+  deleteOne: {
+    responses: {
+      INTERNAL_SERVER_ERROR: 'Something went wrong',
+      UNPROCESSABLE_ENTITY: 'Invalid data',
+      NOT_FOUND: 'Favorite Recipe with provided combo of ids was not found',
+      OK: 'Favorite recipe removed, returns successful message',
+    },
+  },
+} as const satisfies Record<string, RouteReturnMessages>;
 
 export const create = createRoute({
   path: PATH_PREFIX,
   method: 'post',
   tags,
   request: {
-    body: jsonContentRequired(createFavoriteRecipeSchema, 'Favorite Recipe to create'),
+    body: jsonContentRequired(createFavoriteRecipeSchema, routeReturnMessages.create.request.body),
   },
   responses: {
-    [StatusCodes.INTERNAL_SERVER_ERROR]: jsonContent(errorJSONSchema, 'Something went wrong'),
-    [StatusCodes.CONFLICT]: jsonContent(errorJSONSchema, 'Favorite recipe already exists'),
+    [StatusCodes.INTERNAL_SERVER_ERROR]: jsonContent(
+      errorJSONSchema,
+      routeReturnMessages.create.responses.INTERNAL_SERVER_ERROR
+    ),
+    [StatusCodes.CONFLICT]: jsonContent(
+      errorJSONSchema,
+      routeReturnMessages.create.responses.CONFLICT
+    ),
     [StatusCodes.CREATED]: jsonContent(
       favoriteRecipeSchema,
-      'Favorite Recipe created, returns created entity'
+      routeReturnMessages.create.responses.CREATED
     ),
   },
 });
@@ -42,11 +95,13 @@ export const getAll = createRoute({
     params: getAllFavoriteRecipesParamsSchema,
   },
   responses: {
-    [StatusCodes.INTERNAL_SERVER_ERROR]: jsonContent(errorJSONSchema, 'Something went wrong'),
-    [StatusCodes.UNPROCESSABLE_ENTITY]: jsonContent(errorJSONSchema, 'Invalid data'),
+    [StatusCodes.INTERNAL_SERVER_ERROR]: jsonContent(
+      errorJSONSchema,
+      routeReturnMessages.getAll.responses.INTERNAL_SERVER_ERROR
+    ),
     [StatusCodes.OK]: jsonContent(
       favoriteRecipeSchema.array(),
-      'Returns all favorite recipes for user'
+      routeReturnMessages.getAll.responses.OK
     ),
   },
 });
@@ -59,13 +114,19 @@ export const getById = createRoute({
     params: getFavoriteRecipeByIdParamsSchema,
   },
   responses: {
-    [StatusCodes.INTERNAL_SERVER_ERROR]: jsonContent(errorJSONSchema, 'Something went wrong'),
-    [StatusCodes.UNPROCESSABLE_ENTITY]: jsonContent(errorJSONSchema, 'Invalid data'),
+    [StatusCodes.INTERNAL_SERVER_ERROR]: jsonContent(
+      errorJSONSchema,
+      routeReturnMessages.getById.responses.INTERNAL_SERVER_ERROR
+    ),
+    [StatusCodes.UNPROCESSABLE_ENTITY]: jsonContent(
+      errorJSONSchema,
+      routeReturnMessages.getById.responses.UNPROCESSABLE_ENTITY
+    ),
     [StatusCodes.NOT_FOUND]: jsonContent(
       errorJSONSchema,
-      'Favorite Recipe with provided id was not found'
+      routeReturnMessages.getById.responses.NOT_FOUND
     ),
-    [StatusCodes.OK]: jsonContent(favoriteRecipeSchema, 'Returns favorite recipe with provided id'),
+    [StatusCodes.OK]: jsonContent(favoriteRecipeSchema, routeReturnMessages.getById.responses.OK),
   },
 });
 
@@ -75,16 +136,22 @@ export const update = createRoute({
   tags,
   request: {
     params: getFavoriteRecipeByIdParamsSchema,
-    body: jsonContentRequired(updateFavoriteRecipeSchema, 'Favorite Recipe to create'),
+    body: jsonContentRequired(updateFavoriteRecipeSchema, routeReturnMessages.update.request.body),
   },
   responses: {
-    [StatusCodes.INTERNAL_SERVER_ERROR]: jsonContent(errorJSONSchema, 'Something went wrong'),
-    [StatusCodes.UNPROCESSABLE_ENTITY]: jsonContent(errorJSONSchema, 'Invalid data'),
+    [StatusCodes.INTERNAL_SERVER_ERROR]: jsonContent(
+      errorJSONSchema,
+      routeReturnMessages.update.responses.INTERNAL_SERVER_ERROR
+    ),
+    [StatusCodes.UNPROCESSABLE_ENTITY]: jsonContent(
+      errorJSONSchema,
+      routeReturnMessages.update.responses.UNPROCESSABLE_ENTITY
+    ),
     [StatusCodes.NOT_FOUND]: jsonContent(
       errorJSONSchema,
-      'Favorite Recipe with provided combo of ids was not found'
+      routeReturnMessages.update.responses.NOT_FOUND
     ),
-    [StatusCodes.OK]: jsonContent(messageJSONSchema, 'Returns all favorite recipes for user'),
+    [StatusCodes.OK]: jsonContent(messageJSONSchema, routeReturnMessages.update.responses.OK),
   },
 });
 
@@ -96,16 +163,19 @@ export const deleteOne = createRoute({
     params: deleteFavoriteRecipeParamsSchema,
   },
   responses: {
-    [StatusCodes.INTERNAL_SERVER_ERROR]: jsonContent(errorJSONSchema, 'Something went wrong'),
-    [StatusCodes.UNPROCESSABLE_ENTITY]: jsonContent(errorJSONSchema, 'Invalid data'),
+    [StatusCodes.INTERNAL_SERVER_ERROR]: jsonContent(
+      errorJSONSchema,
+      routeReturnMessages.deleteOne.responses.OK
+    ),
+    [StatusCodes.UNPROCESSABLE_ENTITY]: jsonContent(
+      errorJSONSchema,
+      routeReturnMessages.deleteOne.responses.UNPROCESSABLE_ENTITY
+    ),
     [StatusCodes.NOT_FOUND]: jsonContent(
       errorJSONSchema,
-      'Favorite Recipe with provided combo of ids was not found'
+      routeReturnMessages.deleteOne.responses.UNPROCESSABLE_ENTITY
     ),
-    [StatusCodes.OK]: jsonContent(
-      messageJSONSchema,
-      'Favorite recipe removed, returns successful message'
-    ),
+    [StatusCodes.OK]: jsonContent(messageJSONSchema, routeReturnMessages.deleteOne.responses.OK),
   },
 });
 

@@ -1,6 +1,6 @@
 import { ZodSchema } from '../lib/types';
 
-export const jsonContent = <T extends ZodSchema>(schema: T, description: string) => {
+export const jsonContent = <T extends ZodSchema, D extends string>(schema: T, description: D) => {
   return {
     content: {
       'application/json': {

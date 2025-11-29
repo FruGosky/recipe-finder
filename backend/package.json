@@ -7,6 +7,10 @@
     "build": "bun build src/server.ts --outfile dist/server.js --target bun",
     "build:types": "tsc",
     "start": "bun dist/server.js",
+    "test": "vitest run --reporter=verbose",
+    "test:watch": "vitest watch --reporter=verbose",
+    "test:coverage": "vitest run --coverage --reporter=verbose",
+    "test:ui": "vitest --ui",
     "db:generate": "bunx drizzle-kit generate",
     "db:push": "bunx drizzle-kit push",
     "lint": "bunx eslint . && echo '✅ Lint passed!'",
@@ -23,10 +27,12 @@
     "@hono/zod-validator": "^0.7.4",
     "@scalar/hono-api-reference": "^0.9.24",
     "cron": "^4.3.4",
+    "dotenv": "^17.2.3",
     "drizzle-orm": "^0.44.7",
     "hono": "^4.10.6",
-    "http-status-codes": "^2.3.0",
     "pg": "^8.16.3",
+    "pino": "^9.5.0",
+    "vite-tsconfig-paths": "^5.1.4",
     "zod": "^4.1.12"
   },
   "devDependencies": {
@@ -34,11 +40,14 @@
     "@types/pg": "^8.15.6",
     "@typescript-eslint/eslint-plugin": "^8.46.4",
     "@typescript-eslint/parser": "^8.46.4",
+    "@vitest/coverage-v8": "^4.0.10",
+    "@vitest/ui": "^4.0.10",
     "drizzle-kit": "^0.31.6",
     "eslint": "^9.39.1",
     "eslint-plugin-unused-imports": "^4.3.0",
     "pino-pretty": "^13.0.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.10"
   }
 }

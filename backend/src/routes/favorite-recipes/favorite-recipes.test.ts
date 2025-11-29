@@ -7,12 +7,19 @@ import { favoriteRecipesRouter } from '.';
 const client = testClient(createTestApp(favoriteRecipesRouter));
 
 describe('Favorite Recipes', () => {
-  it(`${
+  it(`GET ALL | ${
     client['favorite-recipes'].$url().pathname
-  } should return all favorite recipes for a user`, async () => {
+  } | should return all favorite recipes for a user`, async () => {
     const res = await client['favorite-recipes'][':userId'].$get({ param: { userId: '1' } });
     expect(res.status).toBe(StatusCodes.OK);
     const json = await res.json();
     expect(json).toBeInstanceOf(Array);
+  });
+
+  it(`GET ALL | ${
+    client['favorite-recipes'].$url().pathname
+  } | should throw for empty param`, async () => {
+    const res = await client['favorite-recipes'][':userId'].$get({ param: { userId: '' } });
+    expect(res.status).not.toBe(StatusCodes.OK);
   });
 });
